@@ -2,7 +2,7 @@
 
 A weather forecast web app built with React. Search any city and get current conditions plus a 5-day forecast.
 
-Live demo: [your-vercel-url-here]
+Live demo: (https://weathernow-webapp.netlify.app/)
 
 ---
 
