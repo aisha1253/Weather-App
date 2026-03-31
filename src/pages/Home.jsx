@@ -8,7 +8,7 @@ const Home = () => {
     navigate(`/weather/${cityName.toLowerCase().replace(' ', '-')}`);
   };
 
-  const popularCities = ['London', 'Tokyo', 'New York', 'Dubai', 'Karachi', 'Paris', 'Lahore'];
+  const popularCities = ['London', 'Tokyo', 'Dubai', 'Karachi', 'Paris', 'Lahore'];
 
   return (
     <div
