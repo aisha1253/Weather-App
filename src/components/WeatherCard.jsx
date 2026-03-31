@@ -1,3 +1,5 @@
+import WeatherIcon from './WeatherIcon';
+
 const WeatherCard = ({ data }) => {
   const description = data.weather[0].description;
   const capitalizedDescription = description.charAt(0).toUpperCase() + description.slice(1);
@@ -79,17 +81,7 @@ const WeatherCard = ({ data }) => {
         </div>
 
         {/* Weather Icon */}
-        <img
-          src={`https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`}
-          alt={data.weather[0].description}
-          style={{
-            width: '120px',
-            height: '120px',
-            display: 'block',
-            marginTop: '-10px',
-            marginBottom: '-10px',
-          }}
-        />
+        <WeatherIcon iconCode={data.weather[0].icon} size={100} />
 
         {/* Temperature */}
         <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '12px' }}>

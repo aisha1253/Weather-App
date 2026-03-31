@@ -1,3 +1,5 @@
+import WeatherIcon from './WeatherIcon';
+
 const ForecastCard = ({ forecastList }) => {
   return (
     <>
@@ -50,7 +52,6 @@ const ForecastCard = ({ forecastList }) => {
                 : new Date(item.dt_txt).toLocaleDateString('en', {
                     weekday: 'short',
                   });
-            const iconUrl = `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`;
 
             const isFirst = index === 0;
 
@@ -99,16 +100,7 @@ const ForecastCard = ({ forecastList }) => {
                 </div>
 
                 {/* Icon */}
-                <img
-                  src={iconUrl}
-                  alt={item.weather[0].description}
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    display: 'block',
-                    margin: '0 auto',
-                  }}
-                />
+                <WeatherIcon iconCode={item.weather[0].icon} size={48} />
 
                 {/* High Temp */}
                 <div
