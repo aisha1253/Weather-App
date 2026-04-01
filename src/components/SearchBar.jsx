@@ -1,28 +1,47 @@
 import { useState, useEffect, useRef } from 'react';
 import { getCitySuggestions } from '../services/weatherApi';
 
+const dropHintStyle = {
+  padding: '12px 18px',
+  color: '#64748b',
+  fontSize: '14px',
+  lineHeight: 1.45,
+  fontFamily: "'Outfit', sans-serif",
+};
+
 const SearchBar = ({ onCitySelect }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showDrop, setShowDrop] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const wrapperRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (query.length >= 2) {
-        try {
-          const results = await getCitySuggestions(query);
-          setSuggestions(results);
-          setShowDrop(true);
-        } catch (error) {
-          setSuggestions([]);
-          setShowDrop(false);
-        }
-      } else {
+      if (query.trim().length < 2) {
         setSuggestions([]);
+        setFetchError(null);
         setShowDrop(false);
+        setLoading(false);
+        return;
       }
-    }, 400);
+
+      const trimmed = query.trim();
+      setLoading(true);
+      setFetchError(null);
+      try {
+        const results = await getCitySuggestions(trimmed);
+        setSuggestions(Array.isArray(results) ? results : []);
+        setShowDrop(true);
+      } catch (error) {
+        setSuggestions([]);
+        setFetchError(error.message || 'Could not load suggestions.');
+        setShowDrop(true);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -38,11 +57,26 @@ const SearchBar = ({ onCitySelect }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSuggestionClick = (name) => {
-    onCitySelect(name);
+  const handleSuggestionClick = (city) => {
+    onCitySelect(city.weatherQuery);
     setQuery('');
     setSuggestions([]);
+    setFetchError(null);
     setShowDrop(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (query.trim().length < 2) return;
+    if (suggestions.length > 0) {
+      handleSuggestionClick(suggestions[0]);
+      return;
+    }
+    setFetchError(
+      'No city matched. Type a few letters and pick a suggestion, or check spelling (try English names).',
+    );
+    setShowDrop(true);
   };
 
   return (
@@ -67,6 +101,7 @@ const SearchBar = ({ onCitySelect }) => {
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder="Search city..."
         style={{
           width: '100%',
@@ -84,6 +119,9 @@ const SearchBar = ({ onCitySelect }) => {
         onFocus={(e) => {
           e.target.style.background = 'rgba(255,255,255,0.9)';
           e.target.style.borderColor = 'rgba(99,102,241,0.3)';
+          if (query.trim().length >= 2 && (suggestions.length > 0 || fetchError)) {
+            setShowDrop(true);
+          }
         }}
         onBlur={(e) => {
           e.target.style.background = 'rgba(255,255,255,0.7)';
@@ -91,8 +129,8 @@ const SearchBar = ({ onCitySelect }) => {
         }}
       />
 
-      {/* Dropdown */}
-      {showDrop && suggestions.length > 0 && (
+      {/* Dropdown: full city names from Geo API (e.g. partial "los ang" → "Los Angeles, California, US") */}
+      {showDrop && query.trim().length >= 2 && (
         <div
           style={{
             position: 'absolute',
@@ -108,32 +146,42 @@ const SearchBar = ({ onCitySelect }) => {
             boxShadow: '0 8px 32px rgba(99,102,241,0.15)',
           }}
         >
-          {suggestions.map((city, index) => (
-            <div
-              key={index}
-              onClick={() => handleSuggestionClick(city.name)}
-              style={{
-                padding: '12px 18px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                borderBottom: '1px solid rgba(99,102,241,0.08)',
-                transition: 'background 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(99,102,241,0.06)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              <span style={{ color: '#1e3a8a', fontWeight: 500 }}>{city.name}</span>
-              <span style={{ color: '#94a3b8', fontSize: '13px' }}>
-                , {city.country}
-              </span>
-            </div>
-          ))}
+          {loading && <div style={dropHintStyle}>Searching cities…</div>}
+          {!loading && fetchError && <div style={dropHintStyle}>{fetchError}</div>}
+          {!loading &&
+            !fetchError &&
+            suggestions.length === 0 && (
+              <div style={dropHintStyle}>
+                No matching cities. Try a different spelling, use English names, or add the country (e.g.
+                Paris, FR).
+              </div>
+            )}
+          {!loading &&
+            !fetchError &&
+            suggestions.length > 0 &&
+            suggestions.map((city) => (
+              <div
+                key={`${city.lat}-${city.lon}-${city.country}-${city.name}`}
+                onClick={() => handleSuggestionClick(city)}
+                style={{
+                  padding: '12px 18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  borderBottom: '1px solid rgba(99,102,241,0.08)',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(99,102,241,0.06)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <span style={{ color: '#1e3a8a', fontWeight: 500, fontSize: '15px' }}>{city.label}</span>
+              </div>
+            ))}
         </div>
       )}
     </div>

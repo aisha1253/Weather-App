@@ -4,8 +4,8 @@ import SearchBar from '../components/SearchBar';
 const Home = () => {
   const navigate = useNavigate();
 
-  const handleCitySelect = (cityName) => {
-    navigate(`/weather/${cityName.toLowerCase().replace(' ', '-')}`);
+  const handleCitySelect = (cityQuery) => {
+    navigate(`/weather/${encodeURIComponent(cityQuery)}`);
   };
 
   const popularCities = ['London', 'Tokyo', 'Dubai', 'Karachi', 'Paris', 'Lahore'];

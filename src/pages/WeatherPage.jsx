@@ -11,7 +11,7 @@ const WeatherPage = () => {
   const { weatherData, forecastData, loading, error } = useWeather(city);
 
   const handleCitySelect = (newCity) => {
-    navigate(`/weather/${newCity.toLowerCase().replace(' ', '-')}`);
+    navigate(`/weather/${encodeURIComponent(newCity)}`);
   };
 
   if (loading) {
@@ -41,10 +41,22 @@ const WeatherPage = () => {
               marginBottom: '8px',
             }}
           >
-            City not found
+            Couldn&apos;t load this city
           </h2>
-          <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>
+          <p
+            style={{
+              color: '#64748b',
+              fontSize: '14px',
+              marginBottom: '12px',
+              maxWidth: '360px',
+              lineHeight: 1.5,
+            }}
+          >
             {error}
+          </p>
+          <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '24px', maxWidth: '360px' }}>
+            Tip: use the search bar, pick a suggestion (full name + country), or try{' '}
+            <strong style={{ color: '#64748b' }}>City, Country code</strong> (e.g. Tokyo, JP).
           </p>
           <button
             onClick={() => navigate('/')}
